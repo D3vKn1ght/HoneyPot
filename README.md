@@ -89,7 +89,7 @@
 
 ---
 
-## 3. Sơ đồ Hệ thống (gợi ý vẽ draw.io / diagrams.net)
+## 3. Sơ đồ Hệ thống
 
 - **Public Zone**: Cowrie, Dionaea, Glastopf
 - **Email Trap Zone**: Mailoney, spam folder catcher
