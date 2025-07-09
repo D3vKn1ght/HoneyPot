@@ -16,4 +16,4 @@ services:
      - "127.0.0.1:64303:8080"
     image: "dtagdevsec/spiderfoot:24.04"
     volumes:
-     - $HOME/tpotce/data/spiderfoot:/home/spiderfoot/.spiderfoot
+     - $HOME/HoneyPot/data/spiderfoot:/home/spiderfoot/.spiderfoot

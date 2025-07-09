@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-set -e
+
+set -e  # Exit on error
 
 myINSTALL_NOTIFICATION="### Now installing required packages ..."
 myUSER=$(whoami)
-myTPOT_CONF_FILE="/home/${myUSER}/tpotce/.env"
+myTPOT_CONF_FILE="/home/${myUSER}/HoneyPot/.env"
 myPACKAGES_DEBIAN="ansible apache2-utils cracklib-runtime wget"
 myPACKAGES_FEDORA="ansible cracklib httpd-tools wget"
 myPACKAGES_ROCKY="ansible-core ansible-collection-redhat-rhel_mgmt epel-release cracklib httpd-tools wget"
@@ -18,137 +19,112 @@ myINSTALLER=$(cat << "EOF"
 EOF
 )
 
-# Check if not run as root
-if [ "$EUID" -eq 0 ]; then
+if [[ $EUID -eq 0 ]]; then
   echo "This script should not be run as root. Please run it as a regular user."
   exit 1
 fi
 
-# Check distribution
 mySUPPORTED_DISTRIBUTIONS=("AlmaLinux" "Debian GNU/Linux" "Fedora Linux" "openSUSE Tumbleweed" "Raspbian GNU/Linux" "Rocky Linux" "Ubuntu")
-myCURRENT_DISTRIBUTION=$(awk -F= '/^NAME/{print $2}' /etc/os-release | tr -d '"')
+myCURRENT_DISTRIBUTION=$(awk -F= '/^NAME=/{print $2}' /etc/os-release | tr -d '"')
 
-if [[ ! " ${mySUPPORTED_DISTRIBUTIONS[*]} " =~ " ${myCURRENT_DISTRIBUTION} " ]]; then
-  echo "### Only the following distributions are supported: ${mySUPPORTED_DISTRIBUTIONS[*]}"
+if [[ ! " ${mySUPPORTED_DISTRIBUTIONS[@]} " =~ " ${myCURRENT_DISTRIBUTION} " ]]; then
+  echo "### Unsupported distribution: ${myCURRENT_DISTRIBUTION}"
   exit 1
 fi
 
-# Begin installer
+# Installer Banner
 echo "$myINSTALLER"
-echo "### This script will now install T-Pot and all of its dependencies."
+echo "\n### This script will now install T-Pot and its dependencies."
+read -rp "### Install? (y/n) " myQST
 
-myQST=""
-while [[ "$myQST" != "y" && "$myQST" != "n" ]]; do
-  read -p "### Install? (y/n) " myQST
-done
-if [ "$myQST" = "n" ]; then
+if [[ $myQST != "y" ]]; then
   echo "### Aborting!"
   exit 0
 fi
 
-# Install packages
-case "$myCURRENT_DISTRIBUTION" in
+# Package Installation
+case $myCURRENT_DISTRIBUTION in
   "Fedora Linux")
-    echo "$myINSTALL_NOTIFICATION"
     sudo dnf -y --refresh install $myPACKAGES_FEDORA
     ;;
   "Debian GNU/Linux"|"Raspbian GNU/Linux"|"Ubuntu")
-    echo "$myINSTALL_NOTIFICATION"
     if ! command -v sudo >/dev/null; then
-      echo "### ‘sudo‘ not installed. Trying to install ..."
-      su -c "apt -y update && NEEDRESTART_SUSPEND=1 apt -y install sudo $myPACKAGES_DEBIAN && /usr/sbin/usermod -aG sudo $myUSER && echo '$myUSER ALL=(ALL:ALL) ALL' | tee /etc/sudoers.d/$myUSER >/dev/null && chmod 440 /etc/sudoers.d/$myUSER"
+      echo "### 'sudo' is not installed. Installing with root access..."
+      su -c "apt -y update && apt -y install sudo $myPACKAGES_DEBIAN && usermod -aG sudo $myUSER"
     else
-      sudo apt update
-      sudo NEEDRESTART_SUSPEND=1 apt install -y $myPACKAGES_DEBIAN
+      sudo apt update && sudo NEEDRESTART_SUSPEND=1 apt install -y $myPACKAGES_DEBIAN
     fi
     ;;
   "openSUSE Tumbleweed")
-    echo "$myINSTALL_NOTIFICATION"
-    sudo zypper refresh
-    sudo zypper install -y $myPACKAGES_OPENSUSE
-    echo "export ANSIBLE_PYTHON_INTERPRETER=/bin/python3" | sudo tee /etc/profile.d/ansible.sh >/dev/null
+    sudo zypper refresh && sudo zypper install -y $myPACKAGES_OPENSUSE
+    echo "export ANSIBLE_PYTHON_INTERPRETER=/bin/python3" | sudo tee /etc/profile.d/ansible.sh
     source /etc/profile.d/ansible.sh
     ;;
   "AlmaLinux"|"Rocky Linux")
-    echo "$myINSTALL_NOTIFICATION"
     sudo dnf -y --refresh install $myPACKAGES_ROCKY
     ansible-galaxy collection install ansible.posix
     ;;
 esac
 
-# Tag for ansible
-case "$myCURRENT_DISTRIBUTION" in
-  "Fedora Linux"|"Debian GNU/Linux"|"Raspbian GNU/Linux"|"Rocky Linux")
-    myANSIBLE_TAG=$(echo "$myCURRENT_DISTRIBUTION" | cut -d " " -f 1)
-    ;;
-  *)
-    myANSIBLE_TAG="$myCURRENT_DISTRIBUTION"
-    ;;
-esac
+# Ansible tags
+declare -A DIST_TAG_MAP=( ["Fedora Linux"]="Fedora" ["Debian GNU/Linux"]="Debian" ["Raspbian GNU/Linux"]="Raspbian" ["Rocky Linux"]="Rocky" )
+myANSIBLE_TAG=${DIST_TAG_MAP[$myCURRENT_DISTRIBUTION]:-$myCURRENT_DISTRIBUTION}
 
-# Get Ansible playbook
-if [ ! -f installer/install/tpot.yml ] && [ ! -f tpot.yml ]; then
-  echo "### Downloading Ansible playbook..."
+# Download playbook if needed
+if [[ ! -f installer/install/tpot.yml && ! -f tpot.yml ]]; then
+  echo "### Downloading T-Pot Ansible Playbook..."
   wget -qO tpot.yml https://raw.githubusercontent.com/telekom-security/tpotce/master/installer/install/tpot.yml
   myANSIBLE_TPOT_PLAYBOOK="tpot.yml"
 else
-  echo "### Using local playbook..."
-  myANSIBLE_TPOT_PLAYBOOK=${myTPOT_CONF_FILE:-"tpot.yml"}
+  myANSIBLE_TPOT_PLAYBOOK=$( [[ -f installer/install/tpot.yml ]] && echo "installer/install/tpot.yml" || echo "tpot.yml" )
 fi
 
-# Check sudo access
+# Sudo check
 if sudo -n true 2>/dev/null; then
   myANSIBLE_BECOME_OPTION="--become"
 else
   myANSIBLE_BECOME_OPTION="--ask-become-pass"
 fi
 
-# Run playbook
-echo "### Running Ansible playbook..."
+# Run Ansible Playbook
+echo "### Running T-Pot Ansible Playbook..."
 rm -f "$HOME/install_tpot.log"
 ANSIBLE_LOG_PATH="$HOME/install_tpot.log" ansible-playbook "$myANSIBLE_TPOT_PLAYBOOK" -i 127.0.0.1, -c local --tags "$myANSIBLE_TAG" $myANSIBLE_BECOME_OPTION
 
-# Ask for web user
-while true; do
-  read -rp "### Enter your web user name: " myWEB_USER
-  myWEB_USER=$(echo "$myWEB_USER" | tr -cd '[:alnum:]_.-')
-  echo "### Your username is: $myWEB_USER"
-  read -rp "### Is this correct? (y/n) " myOK
-  [[ "$myOK" =~ [Yy] ]] && [ -n "$myWEB_USER" ] && break
-done
+# Check result
+if [[ $? -ne 0 ]]; then
+  echo "### Playbook failed. See install_tpot.log for details."
+  exit 1
+else
+  echo "### Playbook completed successfully."
+fi
 
-# Ask for web password
-mySECURE=0
-while [ "$mySECURE" -eq 0 ]; do
-  read -rsp "### Enter password: " myWEB_PW
-  echo
-  read -rsp "### Repeat password: " myWEB_PW2
-  echo
-  if [ "$myWEB_PW" != "$myWEB_PW2" ]; then
-    echo "### Passwords do not match."
-    continue
-  fi
-  mySECURE=$(echo "$myWEB_PW" | /usr/sbin/cracklib-check | grep -c "OK")
-  if [ "$mySECURE" -eq 0 ]; then
-    read -rp "### Keep insecure password? (y/n) " myOK
-    [[ ! "$myOK" =~ [Yy] ]] && continue
-    mySECURE=1
-  fi
-done
+# Web user setup
+read -rp "### Enter your web user name: " myWEB_USER
+myWEB_USER=$(echo "$myWEB_USER" | tr -cd '[:alnum:]_.-')
+read -rsp "### Enter password for your web user: " myWEB_PW; echo
+read -rsp "### Repeat password: " myWEB_PW2; echo
 
-# Set htpasswd
-echo "### Updating T-Pot config with user/password..."
+if [[ "$myWEB_PW" != "$myWEB_PW2" ]]; then
+  echo "### Passwords do not match. Aborting."
+  exit 1
+fi
+
+mySECURE=$(printf "%s" "$myWEB_PW" | /usr/sbin/cracklib-check | grep -c OK)
+if [[ "$mySECURE" == "0" ]]; then
+  read -rp "### Insecure password. Keep it anyway? (y/n) " myOK
+  [[ "$myOK" != "y" ]] && exit 1
+fi
+
 myWEB_USER_ENC=$(htpasswd -b -n "$myWEB_USER" "$myWEB_PW")
 myWEB_USER_ENC_B64=$(echo -n "$myWEB_USER_ENC" | base64 -w0)
-sed -i "s|^WEB_USER=.*|WEB_USER=${myWEB_USER_ENC_B64}|" "$myTPOT_CONF_FILE"
+sed -i "s|^WEB_USER=.*|WEB_USER=$myWEB_USER_ENC_B64|" "$myTPOT_CONF_FILE"
 
-# Pull docker images
-echo "### Pulling docker images..."
-sudo docker compose -f "/home/${myUSER}/tpotce/docker-compose.yml" pull
+# Docker pull
+echo "### Pulling Docker images..."
+sudo docker compose -f "/home/${myUSER}/HoneyPot/docker-compose.yml" pull
 
-# Netstat check
-echo "### Checking for port conflicts..."
+# Netstat for ports
 sudo grc netstat -tulpen || sudo netstat -tulpen
 
-# Done
-echo "### Done. Please reboot and reconnect via SSH on tcp/64295."
+echo -e "\n### Done. Please reboot and reconnect via SSH on port 64295."

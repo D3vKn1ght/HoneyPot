@@ -23,6 +23,6 @@ services:
     image: "ghcr.io/telekom-security/nginx:24.04.1"
     read_only: true
     volumes:
-     - $HOME/tpotce/data/nginx/cert/:/etc/nginx/cert/:ro
-     - $HOME/tpotce/data/nginx/conf/nginxpasswd:/etc/nginx/nginxpasswd:ro
-     - $HOME/tpotce/data/nginx/log/:/var/log/nginx/
+     - $HOME/HoneyPot/data/nginx/cert/:/etc/nginx/cert/:ro
+     - $HOME/HoneyPot/data/nginx/conf/nginxpasswd:/etc/nginx/nginxpasswd:ro
+     - $HOME/HoneyPot/data/nginx/log/:/var/log/nginx/

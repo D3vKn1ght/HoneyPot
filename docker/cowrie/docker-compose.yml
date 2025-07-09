@@ -21,7 +21,7 @@ services:
     image: "ghcr.io/telekom-security/cowrie:24.04.1"
     read_only: true
     volumes:
-     - $HOME/tpotce/data/cowrie/downloads:/home/cowrie/cowrie/dl
-     - $HOME/tpotce/data/cowrie/keys:/home/cowrie/cowrie/etc
-     - $HOME/tpotce/data/cowrie/log:/home/cowrie/cowrie/log
-     - $HOME/tpotce/data/cowrie/log/tty:/home/cowrie/cowrie/log/tty
+     - $HOME/HoneyPot/data/cowrie/downloads:/home/cowrie/cowrie/dl
+     - $HOME/HoneyPot/data/cowrie/keys:/home/cowrie/cowrie/etc
+     - $HOME/HoneyPot/data/cowrie/log:/home/cowrie/cowrie/log
+     - $HOME/HoneyPot/data/cowrie/log/tty:/home/cowrie/cowrie/log/tty

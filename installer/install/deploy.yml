@@ -6,11 +6,11 @@
 - name: T-POT Sensor Deployment
   hosts: all
   vars:
-    local_nginx_cert_path: "~/tpotce/data/nginx/cert/nginx.crt"
-    remote_cert_path: "~/tpotce/data/hive.crt"
-    remote_sensor_yml_path: "~/tpotce/compose/sensor.yml"
-    remote_docker_compose_path: "~/tpotce/docker-compose.yml"
-    env_file_path: "~/tpotce/.env"
+    local_nginx_cert_path: "~/HoneyPot/data/nginx/cert/nginx.crt"
+    remote_cert_path: "~/HoneyPot/data/hive.crt"
+    remote_sensor_yml_path: "~/HoneyPot/compose/sensor.yml"
+    remote_docker_compose_path: "~/HoneyPot/docker-compose.yml"
+    env_file_path: "~/HoneyPot/.env"
 
   tasks:
     - name: Ensure the destination directory exists

@@ -718,15 +718,6 @@
         - "Rocky"
         - "Ubuntu"
 
-    - name: Clone / Update T-Pot repository (All)
-      git:
-        repo: 'https://github.com/telekom-security/tpotce'
-        dest: '/home/{{ ansible_user_id }}/tpotce/'
-        version: master
-        clone: yes
-        update: no
-      when: ansible_distribution in ["AlmaLinux", "Debian", "Fedora", "openSUSE Tumbleweed", "Raspbian", "Rocky", "Ubuntu"]
-
     - name: Add current user to Docker, T-Pot group (All)
       become: true
       user:
@@ -758,7 +749,7 @@
     - name: Install systemd service (All)
       become: true
       ansible.builtin.template:
-        src: '/home/{{ ansible_user_id }}/tpotce/installer/install/tpot.service'
+        src: '/home/{{ ansible_user_id }}/HoneyPot/installer/install/tpot.service'
         dest: '/etc/systemd/system/tpot.service'
         owner: root
         group: root
