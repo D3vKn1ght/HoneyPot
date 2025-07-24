@@ -23,6 +23,26 @@ networks:
   tanner_local: null
   wordpot_local: null
 services:
+  # T-Pot Init Service
+  tpotinit:
+    container_name: tpotinit
+    env_file:
+      - .env
+    restart: always
+    stop_grace_period: 60s
+    tmpfs:
+      - /tmp/etc:uid=2000,gid=2000
+      - /tmp/:uid=2000,gid=2000
+    network_mode: "host"
+    cap_add:
+     - NET_ADMIN
+    image: ${TPOT_REPO}/tpotinit:${TPOT_VERSION}
+    pull_policy: ${TPOT_PULL_POLICY}
+    volumes:
+      - ${TPOT_DOCKER_COMPOSE}:/tmp/tpot/docker-compose.yml:ro
+      - ${TPOT_DATA_PATH}/blackhole:/etc/blackhole
+      - ${TPOT_DATA_PATH}:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
   # Cowrie service
   cowrie:
     container_name: cowrie

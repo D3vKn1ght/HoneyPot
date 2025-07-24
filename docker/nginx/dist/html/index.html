@@ -1,163 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self'; object-src 'none'">
     <meta charset="UTF-8">
-    <!--Setup Font Awesome-->
+    <title>HoneyPot Dashboard</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self'; object-src 'none'">
     <link href="assets/fonts/awesome/css/all.css" rel="stylesheet">
-    <!--Setup Particles, Particles Conf, Clock-->
-    <!-- Check integrity: openssl dgst -sha384 -binary your.file.name | openssl base64 -A-->
-    <script src="assets/js/particles.min.js" defer integrity="sha384-d+UOwmNNIC7V4izkTAKSXzWhjC2GxiS9PTykO1XdOPC3nc2z65UOS7SP6QdKPA70" crossorigin="anonymous"></script>
-    <script src="assets/js/particles_conf.js" defer integrity="sha384-0191YAiOrh905UCYh44ZxeO+pKbvuEOIDEmo3F6qHKDL8FO8s66r6P2w8NGMWp7I" crossorigin="anonymous"></script>
-    <script src="assets/js/clock.js" defer integrity="sha384-ymJnuq0yExd1vCEQFQAvYDv0IWfHL1XJYSRt2nyK73ofjF6GzG5baOjLN1dLkGLI" crossorigin="anonymous"></script>
-
-    <title>T-Pot</title>
+    <script src="assets/js/particles.min.js" defer></script>
+    <script src="assets/js/particles_conf.js" defer></script>
+    <script src="assets/js/clock.js" defer></script>
     <style>
-        /* russo-one-regular - latin */
         @font-face {
-          font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-          font-family: 'Russo One';
-          font-style: normal;
-          font-weight: 400;
-          src: url('assets/fonts/russo-one-v16-latin-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+            font-family: 'Russo One';
+            font-style: normal;
+            font-weight: 400;
+            src: url('assets/fonts/russo-one-v16-latin-regular.woff2') format('woff2');
+            font-display: swap;
         }
-        body, html {
+        html, body {
+            width: 100%;
+            height: 100%;
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            background-color: #000;
-            font-family: 'Russo One', normal;
-        }
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: absolute;
-            top: 0px;
-            left: 20px;
-            right: 20px;
-        }
-        .clock-container, .dynamic-text {
-            color: #e20074;
-            font-size: 72px;
-        }
-        .dynamic-text {
-            text-align: right;
-        }
-        .logo-container {
-            width: 100%;
-            display: flex;
-            justify-content: flex-end;
-            position: absolute;
-            top: 45%;
-            transform: translateY(-50%);
-        }
-        .logo {
-            width: 25vw;
-            height: auto;
-            position: relative;
-            opacity: 0.9;
-            right: 10%;
-            z-index: 1;
+            background: #000;
+            font-family: 'Russo One', Arial, sans-serif;
+            color: #fff;
+            min-height: 100vh;
         }
         #particles-js {
-            position: absolute;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0;
+        }
+        .header-container {
             width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-        .boxes-container {
             display: flex;
-            justify-content: flex-start;
-            position: absolute;
-            bottom: 50px;
-            left: 20px;
-            padding: 0 20px;
-        }
-        .link-box {
-            margin: 0 10px;
-            padding: 20px;
-            padding-top: 60px;
-            background: rgba(51, 51, 51, 0.3);
-            border-radius: 20px;
-            text-align: center;
-            transition: box-shadow 0.5s ease;
-            z-index: 10;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 38px 60px 0 60px;
             box-sizing: border-box;
             position: relative;
-            width: 400px; /* Adjust as needed */
-            min-height: 500px;
-            max-width: 100%;
+            z-index: 2;
+        }
+        .clock-container {
+            font-size: 4vw;
+            color: #e20074;
+            letter-spacing: 2px;
+            text-shadow: 0 4px 24px #e2007470;
+        }
+        .dynamic-text {
+            font-size: 4vw;
+            color: #fff;
+            letter-spacing: 6px;
+            text-shadow: 0 8px 32px #e20074b0, 0 2px 16px #000c;
+            font-weight: bold;
+            background: linear-gradient(90deg, #e20074 0%, #fff 80%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .content-main {
+            width: 100vw;
+            min-height: calc(100vh - 120px);
+            /* header height = ~120px with padding, keep box away from header */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 2;
+        }
+        .boxes-container {
+            margin-top: 50px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .link-box {
+            background: rgba(34, 34, 34, 0.95);
+            border-radius: 32px;
+            box-shadow: 0 8px 32px 0 #e20074a0;
             display: flex;
             flex-direction: column;
-            justify-content: top;
             align-items: center;
+            padding: 60px 40px 60px 40px;
+            gap: 30px;
+            min-width: 340px;
+            max-width: 95vw;
+            margin-bottom: 48px;
         }
-        .links-box::before, .tools-box::before {
-            font-family: 'FontAwesome';
-            content: attr(data-caption);
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: transparent;
-            color: #FFF;
-            padding: 0 10px;
-            font-size: 36px;
-            white-space: nowrap;
-        }
-        .link-box:hover {
-            box-shadow: 0 0 15px 5px rgba(226, 0, 116, 0.6);
-            background: rgba(51, 51, 51, 0.3);
-        }
-        .link-box:hover::before {
+        .link-box::before {
+            content: "\f085  TOOLS";
+            font-family: "FontAwesome", Arial, sans-serif;
             color: #e20074;
-            transition: color 0.5s ease;
+            font-size: 2.1rem;
+            position: relative;
+            top: -32px;
+            left: 0;
+            letter-spacing: 4px;
+            font-weight: 600;
+            filter: drop-shadow(0 4px 16px #e20074a0);
         }
         .link {
-            display: block;
-            color: #FFF;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            color: #fff;
             text-decoration: none;
-            margin: 10px 0;
-            font-size: 42px;
-            transition: color 0.5s ease;
+            font-size: 2.1rem;
+            background: none;
+            border: none;
+            transition: color 0.2s, transform 0.2s, box-shadow 0.2s;
+            padding: 16px 44px;
+            border-radius: 20px;
+            font-weight: 500;
+            box-shadow: 0 0 0 transparent;
+            position: relative;
         }
         .link:hover {
             color: #e20074;
+            background: rgba(226,0,116,0.09);
+            box-shadow: 0 4px 22px #e20074a0;
+            transform: translateY(-3px) scale(1.04);
+        }
+        @media (max-width: 900px) {
+            .header-container { padding: 18px 14px 0 14px;}
+            .dynamic-text, .clock-container { font-size: 8vw;}
+            .content-main { min-height: calc(100vh - 60px);}
+            .boxes-container { margin-top: 16px; }
+            .link-box { min-width: 170px; padding: 28px 2px 28px 2px; }
         }
     </style>
 </head>
 <body>
-
 <div id="particles-js"></div>
-
 <div class="header-container">
     <div class="clock-container" id="clock"></div>
-    <div class="dynamic-text">T-Pot 24.04.1</div>
+    <div class="dynamic-text">HoneyPot</div>
 </div>
-
-<div class="logo-container">
-    <img src="assets/img/logo.webp" alt="T-Pot Logo" class="logo">
-</div>
-
-<div class="boxes-container">
-    <div class="link-box tools-box" data-caption="&#xf085;">
-        <a href="/map/" class="link" target="_blank">Attack Map</a>
-        <a href="/cyberchef/" class="link" target="_blank">Cyberchef</a>
-        <a href="/elasticvue/" class="link" target="_blank">Elasticvue</a>
-        <a href="/kibana/" class="link" target="_blank">Kibana</a>
-        <a href="/spiderfoot/" class="link" target="_blank">Spiderfoot</a>
-    </div>
-    <div class="link-box links-box" data-caption="&#xf0c1;">
-        <a href="https://sicherheitstacho.eu/" class="link" target="_blank">SecurityMeter</a>
-        <a href="https://github.com/telekom-security/tpotce/blob/master/README.md" class="link" target="_blank">T-Pot ReadMe</a>
-        <a href="https://github.com/telekom-security/tpotce/" class="link" target="_blank">T-Pot @ Github</a>
+<div class="content-main">
+    <div class="boxes-container">
+        <div class="link-box">
+            <a href="/map/" class="link" target="_blank"><i class="fas fa-globe"></i>Attack Map</a>
+            <a href="/cyberchef/" class="link" target="_blank"><i class="fas fa-flask"></i>CyberChef</a>
+            <a href="/elasticvue/" class="link" target="_blank"><i class="fas fa-database"></i>Elasticvue</a>
+            <a href="/kibana/" class="link" target="_blank"><i class="fas fa-chart-bar"></i>Kibana</a>
+            <a href="/spiderfoot/" class="link" target="_blank"><i class="fas fa-spider"></i>Spiderfoot</a>
+        </div>
     </div>
 </div>
 </body>
 </html>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const clockElement = document.getElementById('clock');
+        function updateClock() {
+            const now = new Date();
+            clockElement.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+        setInterval(updateClock, 1000);
+        updateClock(); // Initial call to set the clock immediately
+    });
